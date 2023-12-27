@@ -138,7 +138,9 @@ public class CustomFilter : IPositionedPipelineElement<IDeviceReport>
 
         if (value is ITabletReport report)
         {
-            //Compiled expressions return a Complex, so we need to downcast it
+            LastPos = report.Position;
+            LastP = report.Pressure;
+
             pos = report.Position;
             pressure = report.Pressure;
 
@@ -159,6 +161,8 @@ public class CustomFilter : IPositionedPipelineElement<IDeviceReport>
 
         if (value is ITiltReport r3)
         {
+            LastT = r3.Tilt;
+
             if (CalcTX != null)
                 tilt.X = (float)CalcTX.Call(pos.X, pos.Y, pressure, tilt.X, tilt.Y, distance, LastPos.X, LastPos.Y, LastP, LastT.X, LastT.Y, LastD, digitizer.MaxX, digitizer.MaxY, pen.MaxPressure, LastComputedPos.X, LastComputedPos.Y, LastComputedPressure).Real;
 
@@ -171,6 +175,8 @@ public class CustomFilter : IPositionedPipelineElement<IDeviceReport>
 
         if (value is IProximityReport r4)
         {
+            LastD = r4.HoverDistance;
+
             r4.HoverDistance = distance;
             value = r4;
         }
