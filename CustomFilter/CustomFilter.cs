@@ -147,6 +147,9 @@ public class CustomFilter : IPositionedPipelineElement<IDeviceReport>
             );
             report.Pressure = (uint)CalcP.Call(report.Position.X, report.Position.Y, report.Pressure, tilt.X, tilt.Y, distance, LastPos.X, LastPos.Y, LastP, LastT.X, LastT.Y, LastD, digitizer.MaxX, digitizer.MaxY, pen.MaxPressure, LastComputedPos.X, LastComputedPos.Y, LastComputedPressure).Real;
 
+            LastComputedPos = report.Position;
+            LastComputedPressure = report.Pressure;
+
             value = report;
         }
 
@@ -171,9 +174,6 @@ public class CustomFilter : IPositionedPipelineElement<IDeviceReport>
         }
 
         Emit?.Invoke(value);
-
-        LastComputedPos = pos;
-        LastComputedPressure = pressure;
     }
 
     public event Action<IDeviceReport> Emit;
