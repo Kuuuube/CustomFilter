@@ -32,13 +32,13 @@ public class CustomFilter : IPositionedPipelineElement<IDeviceReport>
                                     "cy = Last computed Y coordinate\n" +
                                     "cp = Last computed pressure\n";
 
-    private readonly string[] variables = { "x", "y", "p", "tx", "ty", "d", "lx", "ly", "lp", "ltx", "lty", "ld", "mx", "my", "mp", "cx", "cy", "cp" };
+    private static readonly string[] variables = { "x", "y", "p", "tx", "ty", "d", "lx", "ly", "lp", "ltx", "lty", "ld", "mx", "my", "mp", "cx", "cy", "cp" };
 
-    public FastExpression? CalcX = null;
-    public FastExpression? CalcY = null;
-    public FastExpression? CalcP = null;
-    public FastExpression? CalcTX = null;
-    public FastExpression? CalcTY = null;
+    public FastExpression CalcX = ((Entity)"x").Compile(variables);
+    public FastExpression CalcY = ((Entity)"y").Compile(variables);
+    public FastExpression CalcP = ((Entity)"p").Compile(variables);
+    public FastExpression CalcTX = ((Entity)"tx").Compile(variables);
+    public FastExpression CalcTY = ((Entity)"ty").Compile(variables);
 
     public Vector2 LastPos = Vector2.Zero;
     public uint LastP = 0;
@@ -181,7 +181,7 @@ public class CustomFilter : IPositionedPipelineElement<IDeviceReport>
         LastComputedPressure = pressure;
     }
 
-    public event Action<IDeviceReport>? Emit;
+    public event Action<IDeviceReport> Emit;
     public PipelinePosition Position => PipelinePosition.PreTransform;
 
     [Property("X coordinate polynomial"), DefaultPropertyValue("x"), ToolTip(
