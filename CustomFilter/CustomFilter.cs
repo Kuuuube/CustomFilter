@@ -7,6 +7,7 @@ using OpenTabletDriver.Plugin.Attributes;
 using OpenTabletDriver.Plugin.DependencyInjection;
 using OpenTabletDriver.Plugin.Output;
 using OpenTabletDriver.Plugin.Tablet;
+using OpenTabletDriver.Plugin.Timing;
 
 namespace CustomFilter;
 
@@ -46,6 +47,8 @@ public class CustomFilter : IPositionedPipelineElement<IDeviceReport>
     public uint LastHoverDistance = 0;
     public Vector2 LastComputedPosition = Vector2.Zero;
     public uint LastComputedPressure = 0;
+
+    protected HPETDeltaStopwatch stopwatch = new HPETDeltaStopwatch(true);
 
     /// <summary>
     /// Recompiles all polynomials to a function.
@@ -118,6 +121,12 @@ public class CustomFilter : IPositionedPipelineElement<IDeviceReport>
 
     public void Consume(IDeviceReport value)
     {
+        if (value is not ITabletReport && value is not ITiltReport && value is not IProximityReport) 
+        {
+            Emit?.Invoke(value);
+            return;
+        }
+
         var digitizer = TabletReference.Properties.Specifications.Digitizer;
         var pen = TabletReference.Properties.Specifications.Pen;
 
@@ -125,6 +134,12 @@ public class CustomFilter : IPositionedPipelineElement<IDeviceReport>
         uint pressure = 0;
         Vector2 tilt = Vector2.Zero;
         uint hoverDistance = 0;
+
+        if (value is ITabletReport setTabletReport)
+        {
+            position = setTabletReport.Position;
+            pressure = setTabletReport.Pressure;
+        }
 
         if (value is ITiltReport setTiltReport)
         {
@@ -136,12 +151,21 @@ public class CustomFilter : IPositionedPipelineElement<IDeviceReport>
             hoverDistance = setProximityReport.HoverDistance;
         }
 
+        if (ResetTime > 0 && stopwatch.Elapsed.TotalMilliseconds >= ResetTime)
+        {
+            LastPosition = position;
+            LastPressure = pressure;
+            LastTilt = tilt;
+            LastHoverDistance = hoverDistance;
+            LastComputedPosition = Vector2.Zero;
+            LastComputedPressure = 0;
+        }
+        stopwatch.Restart();
+
         if (value is ITabletReport tabletReport)
         {
             LastPosition = tabletReport.Position;
             LastPressure = tabletReport.Pressure;
-
-            position = 
 
             tabletReport.Position = new Vector2(
                 (float)CalcX.Call(tabletReport.Position.X, tabletReport.Position.Y, tabletReport.Pressure, tilt.X, tilt.Y, hoverDistance, LastPosition.X, LastPosition.Y, LastPressure, LastTilt.X, LastTilt.Y, LastHoverDistance, digitizer.MaxX, digitizer.MaxY, pen.MaxPressure, LastComputedPosition.X, LastComputedPosition.Y, LastComputedPressure).Real,
@@ -197,6 +221,11 @@ public class CustomFilter : IPositionedPipelineElement<IDeviceReport>
     [Property("Y tilt polynomial"), DefaultPropertyValue("ty"), ToolTip(
          "A polynomial that calculates the Y tilt\n" + TOOLTIP)]
     public string TYFunc { get; set; }
+
+    [Property("Reset Time"), Unit("ms"), DefaultPropertyValue(0), ToolTip(
+         "Time in milliseconds between tablet reports until last values are cleared\n" +
+         "A value of 0 will disable resetting")]
+    public int ResetTime { get; set; }
 
     [TabletReference]
     public TabletReference TabletReference { get; set; }
