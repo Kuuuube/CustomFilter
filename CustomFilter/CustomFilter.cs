@@ -40,15 +40,15 @@ public class CustomFilter : IPositionedPipelineElement<IDeviceReport>
     public FastExpression CalcTX = ((Entity)"tx").Compile(variables);
     public FastExpression CalcTY = ((Entity)"ty").Compile(variables);
 
-    public Vector2 LastPos = Vector2.Zero;
-    public uint LastP = 0;
-    public Vector2 LastT = Vector2.Zero;
-    public uint LastD = 0;
-    public Vector2 LastComputedPos = Vector2.Zero;
+    public Vector2 LastPosition = Vector2.Zero;
+    public uint LastPressure = 0;
+    public Vector2 LastTilt = Vector2.Zero;
+    public uint LastHoverDistance = 0;
+    public Vector2 LastComputedPosition = Vector2.Zero;
     public uint LastComputedPressure = 0;
 
     /// <summary>
-    /// Recompiles the X and Y polynomials to a function.
+    /// Recompiles all polynomials to a function.
     /// </summary>
     [OnDependencyLoad]
     public void Recompile()
@@ -121,56 +121,55 @@ public class CustomFilter : IPositionedPipelineElement<IDeviceReport>
         var digitizer = TabletReference.Properties.Specifications.Digitizer;
         var pen = TabletReference.Properties.Specifications.Pen;
 
-        Vector2 pos = Vector2.Zero;
+        Vector2 position = Vector2.Zero;
         uint pressure = 0;
         Vector2 tilt = Vector2.Zero;
-        uint distance = 0;
+        uint hoverDistance = 0;
 
-        if (value is ITiltReport r1)
+        if (value is ITiltReport setTiltReport)
         {
-            tilt = r1.Tilt;
+            tilt = setTiltReport.Tilt;
         }
 
-        if (value is IProximityReport r2)
+        if (value is IProximityReport setProximityReport)
         {
-            distance = r2.HoverDistance;
+            hoverDistance = setProximityReport.HoverDistance;
         }
 
-        if (value is ITabletReport report)
+        if (value is ITabletReport tabletReport)
         {
-            LastPos = report.Position;
-            LastP = report.Pressure;
+            LastPosition = tabletReport.Position;
+            LastPressure = tabletReport.Pressure;
 
-            report.Position = new Vector2(
-                (float)CalcX.Call(report.Position.X, report.Position.Y, report.Pressure, tilt.X, tilt.Y, distance, LastPos.X, LastPos.Y, LastP, LastT.X, LastT.Y, LastD, digitizer.MaxX, digitizer.MaxY, pen.MaxPressure, LastComputedPos.X, LastComputedPos.Y, LastComputedPressure).Real,
-                (float)CalcY.Call(report.Position.X, report.Position.Y, report.Pressure, tilt.X, tilt.Y, distance, LastPos.X, LastPos.Y, LastP, LastT.X, LastT.Y, LastD, digitizer.MaxX, digitizer.MaxY, pen.MaxPressure, LastComputedPos.X, LastComputedPos.Y, LastComputedPressure).Real
+            position = 
+
+            tabletReport.Position = new Vector2(
+                (float)CalcX.Call(tabletReport.Position.X, tabletReport.Position.Y, tabletReport.Pressure, tilt.X, tilt.Y, hoverDistance, LastPosition.X, LastPosition.Y, LastPressure, LastTilt.X, LastTilt.Y, LastHoverDistance, digitizer.MaxX, digitizer.MaxY, pen.MaxPressure, LastComputedPosition.X, LastComputedPosition.Y, LastComputedPressure).Real,
+                (float)CalcY.Call(tabletReport.Position.X, tabletReport.Position.Y, tabletReport.Pressure, tilt.X, tilt.Y, hoverDistance, LastPosition.X, LastPosition.Y, LastPressure, LastTilt.X, LastTilt.Y, LastHoverDistance, digitizer.MaxX, digitizer.MaxY, pen.MaxPressure, LastComputedPosition.X, LastComputedPosition.Y, LastComputedPressure).Real
             );
-            report.Pressure = (uint)CalcP.Call(report.Position.X, report.Position.Y, report.Pressure, tilt.X, tilt.Y, distance, LastPos.X, LastPos.Y, LastP, LastT.X, LastT.Y, LastD, digitizer.MaxX, digitizer.MaxY, pen.MaxPressure, LastComputedPos.X, LastComputedPos.Y, LastComputedPressure).Real;
+            tabletReport.Pressure = (uint)CalcP.Call(tabletReport.Position.X, tabletReport.Position.Y, tabletReport.Pressure, tilt.X, tilt.Y, hoverDistance, LastPosition.X, LastPosition.Y, LastPressure, LastTilt.X, LastTilt.Y, LastHoverDistance, digitizer.MaxX, digitizer.MaxY, pen.MaxPressure, LastComputedPosition.X, LastComputedPosition.Y, LastComputedPressure).Real;
 
-            LastComputedPos = report.Position;
-            LastComputedPressure = report.Pressure;
+            LastComputedPosition = tabletReport.Position;
+            LastComputedPressure = tabletReport.Pressure;
 
-            value = report;
+            value = tabletReport;
         }
 
-        if (value is ITiltReport r3)
+        if (value is ITiltReport tiltReport)
         {
-            LastT = r3.Tilt;
+            LastTilt = tiltReport.Tilt;
 
-            r3.Tilt = new Vector2(
-                (float)CalcTX.Call(pos.X, pos.Y, pressure, tilt.X, tilt.Y, distance, LastPos.X, LastPos.Y, LastP, LastT.X, LastT.Y, LastD, digitizer.MaxX, digitizer.MaxY, pen.MaxPressure, LastComputedPos.X, LastComputedPos.Y, LastComputedPressure).Real,
-                (float)CalcTY.Call(pos.X, pos.Y, pressure, tilt.X, tilt.Y, distance, LastPos.X, LastPos.Y, LastP, LastT.X, LastT.Y, LastD, digitizer.MaxX, digitizer.MaxY, pen.MaxPressure, LastComputedPos.X, LastComputedPos.Y, LastComputedPressure).Real
+            tiltReport.Tilt = new Vector2(
+                (float)CalcTX.Call(position.X, position.Y, pressure, tilt.X, tilt.Y, hoverDistance, LastPosition.X, LastPosition.Y, LastPressure, LastTilt.X, LastTilt.Y, LastHoverDistance, digitizer.MaxX, digitizer.MaxY, pen.MaxPressure, LastComputedPosition.X, LastComputedPosition.Y, LastComputedPressure).Real,
+                (float)CalcTY.Call(position.X, position.Y, pressure, tilt.X, tilt.Y, hoverDistance, LastPosition.X, LastPosition.Y, LastPressure, LastTilt.X, LastTilt.Y, LastHoverDistance, digitizer.MaxX, digitizer.MaxY, pen.MaxPressure, LastComputedPosition.X, LastComputedPosition.Y, LastComputedPressure).Real
             );
 
-            value = r3;
+            value = tiltReport;
         }
 
-        if (value is IProximityReport r4)
+        if (value is IProximityReport proximityReport)
         {
-            LastD = r4.HoverDistance;
-
-            r4.HoverDistance = distance;
-            value = r4;
+            LastHoverDistance = proximityReport.HoverDistance;
         }
 
         Emit?.Invoke(value);
