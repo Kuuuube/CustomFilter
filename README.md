@@ -1,7 +1,7 @@
 # CustomFilter
 The best [OpenTabletDriver](https://github.com/OpentabletDriver/OpenTabletDriver) filter to ever grace this planet!
 
-[![Total Download Count](https://img.shields.io/github/downloads/adryzz/CustomFilter/total.svg)](https://github.com/adryzz/CustomFilter/releases)
+[![Total Download Count](https://img.shields.io/github/downloads/kuuuube/CustomFilter/total.svg)](https://github.com/kuuuube/CustomFilter/releases)
 
 Allows you to use any mathematical expression that can be evaluated to a number as a filtering stage!
 
